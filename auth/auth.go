@@ -9,25 +9,43 @@ import (
 func AddNewUser(raw []byte) error {
 	// parse raw
 	var userData *SignUp
-	fmt.Println(string(raw))
 	err := json.Unmarshal(raw, &userData)
-	fmt.Println("unmarshalled")
 	if err != nil {
 		return fmt.Errorf("error while unmarshaling user signup data: %v", err)
 	}
-	fmt.Println("parsed raw")
-	fmt.Println(userData)
-	fmt.Println(&userData)
-	fmt.Println(*userData)
 	err = sqlconnection.SearchUserInUsers(struct {
 		Name     string
 		Email    string
 		Password string
 		Phone    string
 	}(*userData))
-	fmt.Println("exiting AddNewUser")
 	if err != nil {
-		return fmt.Errorf("error while adding user to db: %v", err)
+		return fmt.Errorf("error while adding user to db in AddNewUser auth.go: %v", err)
+	}
+	return nil
+}
+
+func VerifyCredentials(raw []byte) error {
+	var userData *Login
+	err := json.Unmarshal(raw, &userData)
+	if err != nil {
+		return fmt.Errorf("error while unmarshaling user login data: %v", err)
+	}
+	identifier := ""
+	if userData.Email == "" {
+		identifier = userData.Phone
+	} else {
+		identifier = userData.Email
+	}
+	err = sqlconnection.VerifyCredentials(struct {
+		Identifier string
+		Password   string
+	}{
+		Identifier: identifier,
+		Password:   userData.Password,
+	})
+	if err != nil {
+		return fmt.Errorf("error while searching user in db in VerifyCredentials auth.go: %v", err)
 	}
 	return nil
 }
