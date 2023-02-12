@@ -49,3 +49,7 @@ func VerifyCredentials(raw []byte) error {
 	}
 	return nil
 }
+
+func ResetPassword(raw []byte) error {
+	return nil
+}

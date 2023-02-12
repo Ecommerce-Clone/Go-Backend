@@ -61,9 +61,28 @@ func signup(w http.ResponseWriter, r *http.Request) {
 }
 
 func forgotPassword(w http.ResponseWriter, r *http.Request) {
+	fmt.Printf("endpoint %v with method %v\n", r.URL.Path, r.Method)
 	// email/phone
 	// resp true/false
 	// await otp
+	rawResp, err := io.ReadAll(r.Body)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	err = auth.ResetPassword(rawResp)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	// err = auth.SendOTP(rawResp)
+	// if err != nil {
+	// 	log.Println(err)
+	// 	w.WriteHeader(http.StatusInternalServerError)
+	// 	return
+	// }
 }
 
 func invalidEndpoint(w http.ResponseWriter, r *http.Request) {

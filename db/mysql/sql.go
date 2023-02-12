@@ -163,3 +163,56 @@ func VerifyCredentials(user struct {
 	// close <- true
 	return errors.New("user does not exist")
 }
+
+func ResetPassword(user struct {
+	Identifier string
+}) error {
+	// Find user based on email/phone
+	// Read password id cell value from response
+	// Replace password in passwords table using password id
+	db, err := createConnection("")
+	if err != nil {
+		return fmt.Errorf("error while creating connection for SearchUserInUsers: %v", err)
+	}
+
+	// Search the user record
+	var rows *sql.Rows
+	if strings.Contains(user.Identifier, "@") {
+		rows, err = db.Query("SELECT * FROM users WHERE email = ?", user.Identifier)
+	} else {
+		rows, err = db.Query("SELECT * FROM users WHERE phone = ?", user.Identifier)
+	}
+
+	if err != nil {
+		// close <- true
+		return fmt.Errorf("error while checking if user exists: %v", err)
+	}
+	defer rows.Close()
+	// Iterate over the rows
+	if rows.Next() {
+		// close <- true
+		var password string
+		var id int
+		var name string
+		var email string
+		var phone string
+		var passwordID int
+		var createdAt string
+
+		err = rows.Scan(&id, &name, &email, &phone, &createdAt, &passwordID)
+		if err != nil {
+			return errors.New("error while retrieving user data")
+		}
+
+		row := db.QueryRow("SELECT password FROM passwords WHERE id = ?", passwordID)
+		err = row.Scan(&password)
+		if err != nil {
+			if err == sql.ErrNoRows {
+				return errors.New("password does not exist")
+			} else {
+				return errors.New("error while retrieving password")
+			}
+		}
+	}
+	return nil
+}
